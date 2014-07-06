@@ -48,7 +48,7 @@ def fetch_kobe_follows():
     curr_follows.add(user["screen_name"])
   logger.info("Current follows: %r", curr_follows)
 
-  # new_follows = curr_follows - follows
+  new_follows = curr_follows - follows
   logger.info("New follows: %r", new_follows)
 
   if len(new_follows) == len(curr_follows):
