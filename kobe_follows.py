@@ -1,8 +1,8 @@
 import json
 import logging
+import os
 import time
 
-import config
 import requests
 import schedule
 from requests_oauthlib import OAuth1Session
@@ -12,13 +12,13 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler())
 
 twitter = OAuth1Session(
-  config.TWITTER_API_KEY,
-  client_secret=config.TWITTER_API_SECRET,
-  resource_owner_key=config.TWITTER_ACCESS_TOKEN,
-  resource_owner_secret=config.TWITTER_ACCESS_TOKEN_SECRET)
+  os.environ["TWITTER_API_KEY"],
+  client_secret=os.environ["TWITTER_API_SECRET"],
+  resource_owner_key=os.environ["TWITTER_ACCESS_TOKEN"],
+  resource_owner_secret=os.environ["TWITTER_ACCESS_TOKEN_SECRET"])
 
 pushbullet = requests.Session()
-pushbullet.auth = (config.PUSHBULLET_ACCESS_TOKEN, '')
+pushbullet.auth = (os.environ["PUSHBULLET_ACCESS_TOKEN"], '')
 
 
 follows = set()
