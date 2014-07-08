@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import time
 
@@ -21,6 +22,7 @@ pushbullet = requests.Session()
 pushbullet.auth = (os.environ["PUSHBULLET_ACCESS_TOKEN"], '')
 
 
+screen_names = dict()
 follows = set()
 
 
@@ -31,6 +33,10 @@ def get_data(res):
       "{code}: {message}".format(**error) for error in data["errors"]
     ]))
   return data
+
+
+def get_screen_names(user_ids):
+  return [("@" + screen_names[user_id]) for user_id in user_ids]
 
 
 def fetch_kobe_follows():
@@ -45,11 +51,12 @@ def fetch_kobe_follows():
 
   curr_follows = set()
   for user in fetch_followed_users(data["ids"]):
-    curr_follows.add(user["screen_name"])
-  logger.info("Current follows: %r", curr_follows)
+    curr_follows.add(user["id_str"])
+    screen_names[user["id_str"]] = user["screen_name"]
+  logger.info("Current follows: %r", get_screen_names(curr_follows))
 
   new_follows = curr_follows - follows
-  logger.info("New follows: %r", new_follows)
+  logger.info("New follows: %r", get_screen_names(new_follows))
 
   if len(new_follows) == len(curr_follows):
     logger.info("Initial run!")
@@ -59,23 +66,32 @@ def fetch_kobe_follows():
       data=json.dumps(dict(
         type="list",
         title="Kobe's new follows",
-        items=list(new_follows),
+        items=get_screen_names(new_follows),
       )),
       headers={
         "Content-Type": "application/json",
       })
+    twitter.post(
+      "https://api.twitter.com/1.1/statuses/update.json",
+      data=dict(
+        status="@kobebryant followed:\n" + "\n".join(
+          get_screen_names(new_follows)
+        ),
+      ))
 
   follows.update(new_follows)
 
 
 def fetch_followed_users(user_ids):
-  res = twitter.post(
-    "https://api.twitter.com/1.1/users/lookup.json",
-    data=dict(
-      user_id=",".join(user_ids),
-    ))
-  data = get_data(res)
-  return data
+  followed_users = []
+  for i in range(int(math.ceil(len(user_ids) / 100.))):
+    res = twitter.post(
+      "https://api.twitter.com/1.1/users/lookup.json",
+      data=dict(
+        user_id=",".join(user_ids[i * 100:(i + 1) * 100]),
+      ))
+    followed_users.extend(get_data(res))
+  return followed_users
 
 
 def main():
