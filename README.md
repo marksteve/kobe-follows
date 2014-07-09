@@ -1,6 +1,8 @@
 # Kobe Follows
 
-Get notified when @kobebryant follows someone.
+Get notified when @kobebryant follows someone:
+* Sends notifications through Pushbullet
+* Tweets about the follows
 
 ## Usage
 
